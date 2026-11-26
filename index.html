@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>心理年龄测试</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#f6f4ef;
+    --card:#ffffff;
+    --ink:#2b2a26;
+    --ink-soft:#6b675f;
+    --line:#e6e1d6;
+    --accent:#8a7355;
+    --accent-soft:#efe9dd;
+    --shadow:0 10px 30px rgba(60,50,35,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.7;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:32px 24px 48px;
+    display:flex;
+    flex-direction:column;
+  }
+  .serif{font-family:"Noto Serif SC",serif;}
+
+  /* ===== 通用视图 ===== */
+  .view{display:none;animation:fade .35s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  /* ===== 欢迎页 ===== */
+  .welcome{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:80vh;}
+  .eyebrow{
+    font-size:13px;letter-spacing:.35em;color:var(--accent);
+    text-transform:uppercase;margin-bottom:20px;
+  }
+  .welcome h1{
+    font-size:34px;font-weight:700;letter-spacing:.08em;line-height:1.4;
+    margin-bottom:18px;
+  }
+  .welcome p.desc{
+    color:var(--ink-soft);font-size:15px;margin-bottom:36px;
+  }
+  .field-label{font-size:13px;color:var(--ink-soft);margin-bottom:10px;letter-spacing:.1em;}
+  .age-input{
+    width:100%;padding:16px 18px;font-size:18px;
+    border:1px solid var(--line);border-radius:14px;background:var(--card);
+    color:var(--ink);outline:none;font-family:inherit;
+    transition:border-color .2s;
+  }
+  .age-input:focus{border-color:var(--accent);}
+  .age-hint{font-size:12px;color:var(--ink-soft);margin-top:10px;}
+  .btn{
+    display:block;width:100%;margin-top:28px;padding:17px;
+    background:var(--ink);color:#fff;border:none;border-radius:14px;
+    font-size:16px;letter-spacing:.2em;cursor:pointer;font-family:inherit;
+    transition:opacity .2s,transform .15s;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);}
+  .footer-note{margin-top:32px;font-size:12px;color:var(--ink-soft);text-align:center;}
+
+  /* ===== 答题页 ===== */
+  .quiz-head{margin-bottom:24px;}
+  .quiz-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+  .quiz-count{font-size:13px;color:var(--ink-soft);letter-spacing:.1em;}
+  .quiz-count b{color:var(--accent);font-size:16px;}
+  .progress{height:3px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .progress-bar{height:100%;background:var(--accent);border-radius:3px;width:0;transition:width .3s ease;}
+  .question{font-size:21px;font-weight:600;line-height:1.6;margin:28px 0 26px;letter-spacing:.02em;}
+  .options{display:flex;flex-direction:column;gap:14px;}
+  .option{
+    display:flex;gap:14px;align-items:flex-start;
+    padding:18px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;cursor:pointer;transition:all .2s;
+  }
+  .option:active{transform:scale(.99);}
+  .option .tag{
+    flex:none;width:28px;height:28px;border-radius:50%;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:var(--ink-soft);margin-top:2px;
+  }
+  .option .text{font-size:15.5px;}
+  .option.selected{border-color:var(--accent);background:var(--accent-soft);}
+  .option.selected .tag{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* ===== 结果页 ===== */
+  .result-head{text-align:center;margin:20px 0 28px;}
+  .result-label{font-size:13px;letter-spacing:.3em;color:var(--accent);margin-bottom:18px;}
+  .age-ring{
+    width:180px;height:180px;margin:0 auto 20px;border-radius:50%;
+    border:1px solid var(--line);background:var(--card);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:var(--shadow);
+  }
+  .age-ring .num{font-size:52px;font-weight:700;letter-spacing:.02em;}
+  .age-ring .unit{font-size:13px;color:var(--ink-soft);letter-spacing:.2em;}
+  .result-type{font-size:20px;font-weight:600;letter-spacing:.15em;margin-bottom:10px;}
+  .result-diff{font-size:14px;color:var(--ink-soft);}
+  .result-diff b{color:var(--accent);}
+
+  .compare{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:22px;margin-bottom:20px;
+  }
+  .compare-row{display:flex;justify-content:space-between;padding:10px 0;font-size:14px;}
+  .compare-row span:first-child{color:var(--ink-soft);}
+  .compare-row span:last-child{font-weight:500;}
+  .compare-divider{height:1px;background:var(--line);margin:6px 0;}
+
+  .analysis{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:24px;margin-bottom:20px;
+  }
+  .analysis h3{font-size:15px;letter-spacing:.15em;color:var(--accent);margin-bottom:14px;}
+  .analysis p{font-size:15px;color:var(--ink);margin-bottom:14px;}
+  .analysis p:last-child{margin-bottom:0;}
+  .trait-list{list-style:none;display:flex;flex-direction:column;gap:12px;}
+  .trait-list li{display:flex;gap:12px;font-size:14.5px;}
+  .trait-list li::before{
+    content:"";flex:none;width:6px;height:6px;border-radius:50%;
+    background:var(--accent);margin-top:10px;
+  }
+  .advice{
+    background:var(--accent-soft);border-radius:18px;padding:22px;
+  }
+  .advice h3{font-size:15px;letter-spacing:.15em;color:var(--accent);margin-bottom:12px;}
+  .advice p{font-size:14.5px;color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== 视图：欢迎页 ===== -->
+  <section id="view-welcome" class="view active">
+    <div class="welcome">
+      <div class="eyebrow">Psychological Age Test</div>
+      <h1 class="serif">心理年龄<br>测试</h1>
+      <p class="desc">年龄是数字，心态是选择。18 道情境选择题，探索你内心真正的成熟度，看看你的心理年龄与实际年龄之间，藏着怎样的自己。</p>
+
+      <div class="field-label">你的实际年龄</div>
+      <input id="ageInput" class="age-input" type="number" min="1" max="120" placeholder="请输入年龄，如 25">
+      <div class="age-hint">结果将结合你的实际年龄进行对比分析</div>
+
+      <button class="btn" id="startBtn">开始测试</button>
+      <div class="footer-note">测试结果仅供自我了解与参考</div>
+    </div>
+  </section>
+
+  <!-- ===== 视图：答题页 ===== -->
+  <section id="view-quiz" class="view">
+    <div class="quiz-head">
+      <div class="quiz-meta">
+        <span class="quiz-count"><b id="qIndex">1</b> / 18</span>
+        <span class="quiz-count" id="qStage">第 1 题</span>
+      </div>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+    <h2 class="question serif" id="questionText"></h2>
+    <div class="options" id="optionsBox"></div>
+  </section>
+
+  <!-- ===== 视图：结果页 ===== -->
+  <section id="view-result" class="view">
+    <div class="result-head">
+      <div class="result-label">你的心理年龄</div>
+      <div class="age-ring">
+        <div class="num serif" id="resultAge">--</div>
+        <div class="unit">岁</div>
+      </div>
+      <div class="result-type serif" id="resultType"></div>
+      <div class="result-diff" id="resultDiff"></div>
+    </div>
+
+    <div class="compare">
+      <div class="compare-row"><span>实际年龄</span><span id="compareReal">--</span></div>
+      <div class="compare-divider"></div>
+      <div class="compare-row"><span>心理年龄</span><span id="comparePsych">--</span></div>
+      <div class="compare-divider"></div>
+      <div class="compare-row"><span>差值（心理 − 实际）</span><span id="compareDiff">--</span></div>
+    </div>
+
+    <div class="analysis">
+      <h3>心理画像</h3>
+      <p id="analysisText"></p>
+      <ul class="trait-list" id="traitList"></ul>
+    </div>
+
+    <div class="advice">
+      <h3>给你的建议</h3>
+      <p id="adviceText"></p>
+    </div>
+
+    <button class="btn ghost" id="restartBtn">重新测试</button>
+  </section>
+
+</div>
+
+<script>
+/* ================= 题库 =================
+   每题选项分值：A 少年态 12 / B 青年态 22 / C 中年态 38 / D 通透态 55 */
+const QUESTIONS = [
+  {
+    q: "周末休息时，你更倾向于怎样度过？",
+    options: [
+      "约朋友出门逛街、探店，寻找新鲜好玩的事",
+      "在家追剧、打游戏、刷短视频，轻松放松",
+      "打扫整理房间，把生活安排得井井有条",
+      "安静看书、喝茶，享受独处的时光"
+    ]
+  },
+  {
+    q: "遇到突发的麻烦事，你的第一反应通常是？",
+    options: [
+      "有点慌，先找人商量、吐槽一下",
+      "先冷静下来，再想办法解决",
+      "迅速权衡利弊，按以往经验处理",
+      "觉得一切都是常态，顺其自然"
+    ]
+  },
+  {
+    q: "对于新出现的流行事物（新软件、新玩法），你通常？",
+    options: [
+      "第一时间尝试，乐于追逐潮流",
+      "朋友推荐了，才会去了解一下",
+      "不太感兴趣，保持自己的习惯",
+      "觉得变化太快，懒得接触"
+    ]
+  },
+  {
+    q: "花钱的时候，你更接近下面哪一种？",
+    options: [
+      "喜欢就买，不太在意价格",
+      "会比较价格，但偶尔冲动消费",
+      "有预算规划，理性消费",
+      "能省则省，重视储蓄"
+    ]
+  },
+  {
+    q: "面对压力和挫折，你更常怎样应对？",
+    options: [
+      "情绪起伏很大，需要先发泄出来",
+      "找人倾诉之后，再慢慢恢复",
+      "自己消化，默默调整状态",
+      "看淡得失，觉得没什么大不了"
+    ]
+  },
+  {
+    q: "你对自己目前生活的描述，更接近哪一句？",
+    options: [
+      "充满好奇，想尝试很多种可能",
+      "有目标，正在努力打拼",
+      "追求稳定，重视家庭与责任",
+      "更看重内心的平静与安宁"
+    ]
+  },
+  {
+    q: "和朋友发生矛盾时，你通常会？",
+    options: [
+      "当场表达情绪，过后就忘",
+      "会别扭一阵，等对方先开口",
+      "主动沟通，理性化解分歧",
+      "觉得无所谓，关系淡了也能接受"
+    ]
+  },
+  {
+    q: "回想过去，你最常想起的是哪一段？",
+    options: [
+      "最近发生的新鲜事",
+      "学生时代或年轻时候的经历",
+      "一路走来的成长与收获",
+      "常常感慨岁月流逝"
+    ]
+  },
+  {
+    q: "对于未来，你的心态更接近哪一种？",
+    options: [
+      "充满期待，觉得一切皆有可能",
+      "有规划，一步一步往前走",
+      "只求安稳顺遂，少些波折",
+      "活在当下，未来顺其自然"
+    ]
+  },
+  {
+    q: "你的日常作息状态更接近？",
+    options: [
+      "经常熬夜，作息不太固定",
+      "大体规律，偶尔晚睡",
+      "早睡早起，注重养生",
+      "作息清淡，注重身体感受"
+    ]
+  },
+  {
+    q: "闲暇时，你更喜欢的活动是？",
+    options: [
+      "运动、聚会，热闹的场合",
+      "看电影、听音乐、玩游戏",
+      "阅读、学习，提升自己",
+      "散步、养花，摆弄生活琐事"
+    ]
+  },
+  {
+    q: "做重要决定时，你通常？",
+    options: [
+      "凭感觉，想到就做",
+      "参考他人意见后再决定",
+      "收集信息，权衡利弊后决定",
+      "深思熟虑，倾向稳妥方案"
+    ]
+  },
+  {
+    q: "看到别人的生活，你更容易？",
+    options: [
+      "羡慕，也想拥有同款精彩",
+      "偶尔比较，然后继续自己的节奏",
+      "理解各人有各人的活法",
+      "觉得热闹是别人的，自己安好即可"
+    ]
+  },
+  {
+    q: "面对规则与约束，你的态度是？",
+    options: [
+      "不太喜欢被束缚，想打破常规",
+      "多数遵守，偶尔想变通",
+      "认同规则，按规矩办事",
+      "看透规则背后的人情世故"
+    ]
+  },
+  {
+    q: "你表达情感的方式更接近哪一种？",
+    options: [
+      "直接热烈，喜怒哀乐写在脸上",
+      "在熟悉的人面前才会流露",
+      "比较含蓄，习惯克制情绪",
+      "平和淡然，很少大起大落"
+    ]
+  },
+  {
+    q: "对于学习新技能，你是怎样的态度？",
+    options: [
+      "兴趣广泛，什么都想试一试",
+      "工作需要时才会去学",
+      "有选择地深耕对自己有用的",
+      "觉得够用就好，不必强求"
+    ]
+  },
+  {
+    q: "当身体发出疲惫信号时，你会？",
+    options: [
+      "先撑一撑，忙完再说",
+      "休息一下，缓过来继续",
+      "主动调整作息，认真调养",
+      "放慢节奏，顺应身体需求"
+    ]
+  },
+  {
+    q: "你对“成熟”的理解，更接近哪一句？",
+    options: [
+      "成熟是大人的事，我还想保持天真",
+      "希望自己越来越稳重可靠",
+      "成熟是承担责任、顾全大局",
+      "成熟是看透世事、内心从容"
+    ]
+  }
+];
+
+const SCORE = [12, 22, 38, 55];
+
+/* ================= 状态 ================= */
+let realAge = 0;
+let current = 0;
+let answers = [];
+
+/* ================= 视图切换 ================= */
+const $ = id => document.getElementById(id);
+function showView(name){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("view-" + name).classList.add("active");
+  window.scrollTo({top:0});
+}
+
+/* ================= 欢迎页 ================= */
+$("startBtn").addEventListener("click", () => {
+  const val = parseInt($("ageInput").value, 10);
+  if(isNaN(val) || val < 1 || val > 120){
+    $("ageInput").style.borderColor = "#c07a6a";
+    $("ageInput").placeholder = "请输入有效的年龄（1–120）";
+    return;
+  }
+  realAge = val;
+  current = 0;
+  answers = [];
+  renderQuestion();
+  showView("quiz");
+});
+
+/* ================= 答题渲染 ================= */
+function renderQuestion(){
+  const item = QUESTIONS[current];
+  $("qIndex").textContent = current + 1;
+  $("qStage").textContent = "第 " + (current + 1) + " 题";
+  $("progressBar").style.width = ((current) / QUESTIONS.length * 100) + "%";
+  $("questionText").textContent = item.q;
+
+  const box = $("optionsBox");
+  box.innerHTML = "";
+  const labels = ["A", "B", "C", "D"];
+  item.options.forEach((text, i) => {
+    const el = document.createElement("div");
+    el.className = "option";
+    el.innerHTML = '<div class="tag">' + labels[i] + '</div><div class="text">' + text + '</div>';
+    el.addEventListener("click", () => selectOption(i, el));
+    box.appendChild(el);
+  });
+}
+
+function selectOption(index, el){
+  document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+  el.classList.add("selected");
+  answers[current] = SCORE[index];
+  setTimeout(() => {
+    if(current < QUESTIONS.length - 1){
+      current++;
+      renderQuestion();
+    }else{
+      finish();
+    }
+  }, 280);
+}
+
+/* ================= 计分与结果 ================= */
+function finish(){
+  const total = answers.reduce((a, b) => a + b, 0);
+  let psychAge = Math.round(total / QUESTIONS.length);
+  psychAge = Math.max(6, Math.min(70, psychAge));
+
+  const diff = psychAge - realAge;
+
+  /* 结果分型 */
+  let type, analysis, traits, advice;
+  if(diff <= -15){
+    type = "少年心性";
+    analysis = "你的内心住着一个充满好奇与活力的少年。你对世界保持着旺盛的新鲜感，情绪直接、热爱表达，不喜欢被规矩束缚。相比年龄数字，你更听从内心的热情，这让你在人群中显得轻盈、有感染力。";
+    traits = [
+      "心态年轻，对新鲜事物抱有强烈兴趣与尝试欲",
+      "情感外露，喜怒形于色，不擅长伪装和压抑",
+      "行动力强，常凭直觉与热情做决定",
+      "容易被外界吸引，情绪波动相对明显"
+    ];
+    advice = "保有这份天真与热忱是难得的礼物。同时可以试着在冲动之下多留一步思考，学会安顿情绪、为长远目标做规划，让少年般的创造力，成长为更持久的定力。";
+  }else if(diff <= -5){
+    type = "年轻态心智";
+    analysis = "你的心理状态比实际年龄更轻盈，属于典型的年轻态心智。你既保留了对生活的热情与好奇心，又具备一定的自我调节能力，懂得在放松与上进之间寻找平衡，整体状态舒展而有弹性。";
+    traits = [
+      "好奇心强，愿意接触新事物与新观念",
+      "有一定规划意识，做事会参考他人意见",
+      "情绪比较稳定，能通过倾诉与休息自我恢复",
+      "重视生活乐趣，也不愿放弃个人成长"
+    ];
+    advice = "继续保持这份开放的心态。可以逐步加深对责任与长期目标的思考，在顺境中积累经验、在压力下锤炼韧性，让年轻的活力慢慢沉淀为可靠的成熟。";
+  }else if(diff < 5){
+    type = "年龄相符型";
+    analysis = "你的心理年龄与实际年龄基本吻合，心智发展处于平衡、健康的区间。你能够根据处境调整自己的应对方式：该投入时投入，该克制时克制，既不刻意逞强，也不过度退缩，与现实生活的衔接较为顺畅。";
+    traits = [
+      "情绪调节能力适中，习惯先冷静再处理问题",
+      "做事讲求理性与稳妥，重视规则与秩序",
+      "兼顾当下生活与未来规划，心态务实",
+      "人际关系中懂得沟通与分寸，较为周全"
+    ];
+    advice = "这是一种稳定而舒适的状态。不妨在此基础上给自己一些拓展空间：尝试一些“跳出舒适区”的体验，复盘自己的情绪模式，让心智在平衡之上继续生长。";
+  }else if(diff < 15){
+    type = "沉稳早熟型";
+    analysis = "你的心理年龄明显大于实际年龄，性格沉稳、思虑周全。你习惯先承担责任、顾及他人与大局，做事理性克制，不轻易被情绪带着走，在旁人眼中常常显得可靠、懂事，甚至有些“小大人”。";
+    traits = [
+      "成熟稳重，决策前习惯权衡利弊、深思熟虑",
+      "情绪内敛，擅长自我消化与克制",
+      "责任感强，重视家庭、规则与长期稳定",
+      "看待问题透彻，能理解人情世故"
+    ];
+    advice = "早熟让你少走了许多弯路，也要留意别让自己承担了过多本不属于你的压力。允许自己偶尔放松、任性和依靠别人，把紧绷的肩膀松一松，成熟之外也给自己留一份柔软。";
+  }else{
+    type = "通透老成型";
+    analysis = "你的心理年龄显著高于实际年龄，内心趋于通透淡然。你见过、想过不少事情，对得失荣辱看得较开，情绪很少大起大落，更看重内心的安宁与生活的秩序。这份从容难得，但有时也可能意味着你过早关上了热情的门。";
+    traits = [
+      "心境平和，对冲突与变故不易动心",
+      "生活偏简朴克制，重视身体与精神的安宁",
+      "看透世事规律，处事方式圆融而稳妥",
+      "较少主动追求热闹与新鲜刺激"
+    ];
+    advice = "通透是很珍贵的智慧。如果这份淡然背后有疲惫或回避，可以试着重新连接那些让你心动的人和事，允许生活里多一点烟火气与冒险感，让成熟从容与鲜活热情并存。";
+  }
+
+  /* 渲染结果 */
+  $("resultAge").textContent = psychAge;
+  $("resultType").textContent = type;
+  const diffText = diff > 0 ? "心理年龄比实际年龄大 " + diff + " 岁" :
+                   diff < 0 ? "心理年龄比实际年龄小 " + Math.abs(diff) + " 岁" :
+                   "心理年龄与实际年龄基本一致";
+  $("resultDiff").innerHTML = diffText;
+
+  $("compareReal").textContent = realAge + " 岁";
+  $("comparePsych").textContent = psychAge + " 岁";
+  $("compareDiff").textContent = (diff > 0 ? "+" : "") + diff + " 岁";
+
+  $("analysisText").textContent = analysis;
+  const ul = $("traitList");
+  ul.innerHTML = "";
+  traits.forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    ul.appendChild(li);
+  });
+  $("adviceText").textContent = advice;
+
+  $("progressBar").style.width = "100%";
+  showView("result");
+}
+
+/* ================= 重新开始 ================= */
+$("restartBtn").addEventListener("click", () => {
+  $("ageInput").value = "";
+  showView("welcome");
+});
+</script>
+</body>
+</html>
